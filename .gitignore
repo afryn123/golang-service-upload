@@ -1,0 +1,61 @@
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Output of `go build`
+/bin/
+/build/
+
+# Vendor directory (if not using go modules)
+vendor/
+
+# Dependency directories (if using vendoring)
+/Godeps/
+
+# Go workspace file (if using older Go versions)
+/go.work
+/go.work.sum
+
+# IDE/editor configs
+.vscode/
+.idea/
+*.swp
+*~
+
+# Logs and temp files
+*.log
+*.tmp
+*.bak
+*.DS_Store
+
+# Environment & config files
+.env
+config.yaml
+config.json
+config.toml
+
+# Fiber-specific
+fiber.log
+
+# Database files (optional)
+*.sqlite
+*.db
+
+# Module cache (shouldn't be committed)
+**/pkg/mod/
+
+# Coverage files
+coverage.out
+
+# JetBrains Rider / Goland
+*.iml
+/.idea
+
+# Node/npm if mixed with frontend
+node_modules/
+dist/
