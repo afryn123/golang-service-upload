@@ -7,7 +7,9 @@ import (
 )
 
 type BranchLabaSebelumPajakPenghasilanTaxRepository interface {
-	GetDistinctPeriodeData(tx *gorm.DB, limit int, lastPeriode string) ([]*models.BranchLabaSebelumPajakPenghasilanTax, error)
+	GetDistinctPeriodeData(
+		tx *gorm.DB, limit int, lastPeriode string,
+	) ([]*models.BranchLabaSebelumPajakPenghasilanTax, string, bool, error)
 	SaveFromUpload(tx *gorm.DB, data *models.BranchLabaSebelumPajakPenghasilanTax) error
 }
 
@@ -17,10 +19,9 @@ func NewBranchLabaSebelumPajakPenghasilanTaxRepository() BranchLabaSebelumPajakP
 	return &BranchLabaSebelumPajakPenghasilanTaxRepositoryImpl{}
 }
 
-func (r *BranchLabaSebelumPajakPenghasilanTaxRepositoryImpl) GetDistinctPeriodeData(tx *gorm.DB, limit int, lastPeriode string) ([]*models.BranchLabaSebelumPajakPenghasilanTax, error) {
-
-	var results []*models.BranchLabaSebelumPajakPenghasilanTax
-
+func (r *BranchLabaSebelumPajakPenghasilanTaxRepositoryImpl) GetDistinctPeriodeData(
+	tx *gorm.DB, limit int, lastPeriode string,
+) ([]*models.BranchLabaSebelumPajakPenghasilanTax, string, bool, error) {
 	subQuery := tx.
 		Model(&models.BranchLabaSebelumPajakPenghasilanTax{}).
 		Select("MIN(id)").
@@ -29,19 +30,30 @@ func (r *BranchLabaSebelumPajakPenghasilanTaxRepositoryImpl) GetDistinctPeriodeD
 	query := tx.
 		Model(&models.BranchLabaSebelumPajakPenghasilanTax{}).
 		Where("id IN (?)", subQuery).
-		Order("periode ASC").
-		Limit(limit)
+		Order("periode ASC")
 
 	if lastPeriode != "" {
 		query = query.Where("DATE(periode) > ?", lastPeriode)
 	}
 
-	if err := query.Find(&results).Error; err != nil {
-		return nil, err
+	var tempResults []*models.BranchLabaSebelumPajakPenghasilanTax
+	if err := query.Limit(limit + 1).Find(&tempResults).Error; err != nil {
+		return nil, "", false, err
 	}
 
-	return results, nil
+	hasMore := false
+	if len(tempResults) > limit {
+		hasMore = true
+		tempResults = tempResults[:limit] // potong ke jumlah asli
+	}
 
+	// Ambil lastPeriode dari hasil terakhir
+	lastPeriodeResult := ""
+	if len(tempResults) > 0 {
+		lastPeriodeResult = tempResults[len(tempResults)-1].Periode
+	}
+
+	return tempResults, lastPeriodeResult, hasMore, nil
 }
 
 func (r *BranchLabaSebelumPajakPenghasilanTaxRepositoryImpl) SaveFromUpload(tx *gorm.DB, data *models.BranchLabaSebelumPajakPenghasilanTax) error {

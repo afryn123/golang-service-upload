@@ -21,7 +21,7 @@ type UploadErrorLog struct {
 }
 
 type BranchLabaSebelumPajakPenghasilanTaxService interface {
-	GetDistinctPeriodeData(limit int, lastPeriode string) ([]*models.BranchLabaSebelumPajakPenghasilanTax, error)
+	GetDistinctPeriodeData(limit int, lastPeriode string) ([]*models.BranchLabaSebelumPajakPenghasilanTax, string, bool, error)
 	ImportExcel(file multipart.File, filename string) ([]*models.BranchLabaSebelumPajakPenghasilanTax, error)
 }
 
@@ -41,7 +41,7 @@ func NewBranchLabaSebelumPajakPenghasilanTaxService(db *gorm.DB, repo repositori
 	}
 }
 
-func (s *BranchLabaSebelumPajakPenghasilanTaxServiceImpl) GetDistinctPeriodeData(limit int, lastPeriode string) ([]*models.BranchLabaSebelumPajakPenghasilanTax, error) {
+func (s *BranchLabaSebelumPajakPenghasilanTaxServiceImpl) GetDistinctPeriodeData(limit int, lastPeriode string) ([]*models.BranchLabaSebelumPajakPenghasilanTax, string, bool, error) {
 	return s.BranchLabaSebelumPajakPenghasilanTaxRepository.GetDistinctPeriodeData(s.DB, limit, lastPeriode)
 }
 

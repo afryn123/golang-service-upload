@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"afryn123/technical-test-go/models"
 	"afryn123/technical-test-go/services"
 	"afryn123/technical-test-go/utils"
 	"net/http"
@@ -9,6 +10,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type Data struct {
+	Items       []*models.BranchLabaSebelumPajakPenghasilanTax `json:"items"`
+	LastPeriode string                                         `json:"last_periode"`
+	HasNext     bool                                           `json:"has_next"`
+}
 type BranchLabaSebelumPajakPenghasilanTaxController interface {
 	GetDistinctPeriodeData(ctx *gin.Context)
 	UploadExcel(c *gin.Context)
@@ -25,6 +31,7 @@ func NewBranchLabaSebelumPajakPenghasilanTaxController(service services.BranchLa
 }
 
 func (c *BranchLabaSebelumPajakPenghasilanTaxControllerImpl) GetDistinctPeriodeData(ctx *gin.Context) {
+
 	lastPeriode := ctx.Query("last_periode")
 	limitStr := ctx.DefaultQuery("limit", "10")
 	limit, err := strconv.Atoi(limitStr)
@@ -33,10 +40,16 @@ func (c *BranchLabaSebelumPajakPenghasilanTaxControllerImpl) GetDistinctPeriodeD
 		return
 	}
 
-	data, err := c.BranchLabaSebelumPajakPenghasilanTaxService.GetDistinctPeriodeData(limit, lastPeriode)
+	items, lastPeriodeResult, hasMore, err := c.BranchLabaSebelumPajakPenghasilanTaxService.GetDistinctPeriodeData(limit, lastPeriode)
 	if err != nil {
 		utils.ErrorResponse(ctx, http.StatusInternalServerError, "error fetching data", err)
 		return
+	}
+
+	data := Data{
+		Items:       items,
+		LastPeriode: lastPeriodeResult,
+		HasNext:     hasMore,
 	}
 
 	utils.JSONResponse(ctx, http.StatusOK, "success", data)
