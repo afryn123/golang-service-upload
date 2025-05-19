@@ -48,6 +48,7 @@ func (rc *BranchLabaSebelumPajakPenghasilanTaxControllerImpl) UploadExcel(c *gin
 		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid file", err)
 		return
 	}
+	filename := fileHeader.Filename
 
 	if !utils.IsValidExcelFile(fileHeader) {
 		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid file format", "file must be .xlsx")
@@ -61,14 +62,9 @@ func (rc *BranchLabaSebelumPajakPenghasilanTaxControllerImpl) UploadExcel(c *gin
 	}
 	defer file.Close()
 
-	data, logErr, err := rc.BranchLabaSebelumPajakPenghasilanTaxService.ImportExcel(file)
+	data, err := rc.BranchLabaSebelumPajakPenghasilanTaxService.ImportExcel(file, filename)
 	if err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to import data", err)
-		return
-	}
-
-	if len(logErr) > 0 {
-		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to import data", logErr)
 		return
 	}
 

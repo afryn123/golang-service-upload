@@ -2,6 +2,7 @@ package utils
 
 import (
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -32,8 +33,11 @@ func ParseDate(value string) (string, error) {
 	}
 	t = t.In(loc)
 
-	// Format waktu seperti yang kamu mau: "2006-01-02 15:04:05+07"
 	formatted := t.Format("2006-01-02 15:04:05") + "+07"
 
 	return formatted, nil
+}
+
+func JoinMessages(messages []string) string {
+	return strings.Join(messages, "; ")
 }

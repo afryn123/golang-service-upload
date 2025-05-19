@@ -1,44 +1,32 @@
 package repositories
 
 import (
-	"afryn123/technical-test-go/config"
 	"afryn123/technical-test-go/models"
-	"errors"
 
 	"gorm.io/gorm"
 )
 
 type BranchLabaSebelumPajakPenghasilanTaxRepository interface {
-	GetDistinctPeriodeData(limit int, lastPeriode string) ([]*models.BranchLabaSebelumPajakPenghasilanTax, error)
-	SaveFromUpload(data *models.BranchLabaSebelumPajakPenghasilanTax) error
+	GetDistinctPeriodeData(tx *gorm.DB, limit int, lastPeriode string) ([]*models.BranchLabaSebelumPajakPenghasilanTax, error)
+	SaveFromUpload(tx *gorm.DB, data *models.BranchLabaSebelumPajakPenghasilanTax) error
 }
 
-type BranchLabaSebelumPajakPenghasilanTaxRepositoryImpl struct {
-	DB *gorm.DB
-}
+type BranchLabaSebelumPajakPenghasilanTaxRepositoryImpl struct{}
 
 func NewBranchLabaSebelumPajakPenghasilanTaxRepository() BranchLabaSebelumPajakPenghasilanTaxRepository {
-	if config.DB == nil {
-		panic("database connection is nil")
-	}
-	return &BranchLabaSebelumPajakPenghasilanTaxRepositoryImpl{
-		DB: config.DB,
-	}
+	return &BranchLabaSebelumPajakPenghasilanTaxRepositoryImpl{}
 }
 
-func (r *BranchLabaSebelumPajakPenghasilanTaxRepositoryImpl) GetDistinctPeriodeData(limit int, lastPeriode string) ([]*models.BranchLabaSebelumPajakPenghasilanTax, error) {
-	if r.DB == nil {
-		return nil, errors.New("database connection is nil")
-	}
+func (r *BranchLabaSebelumPajakPenghasilanTaxRepositoryImpl) GetDistinctPeriodeData(tx *gorm.DB, limit int, lastPeriode string) ([]*models.BranchLabaSebelumPajakPenghasilanTax, error) {
 
 	var results []*models.BranchLabaSebelumPajakPenghasilanTax
 
-	subQuery := r.DB.
+	subQuery := tx.
 		Model(&models.BranchLabaSebelumPajakPenghasilanTax{}).
 		Select("MIN(id)").
 		Group("periode")
 
-	query := r.DB.
+	query := tx.
 		Model(&models.BranchLabaSebelumPajakPenghasilanTax{}).
 		Where("id IN (?)", subQuery).
 		Order("periode ASC").
@@ -56,6 +44,6 @@ func (r *BranchLabaSebelumPajakPenghasilanTaxRepositoryImpl) GetDistinctPeriodeD
 
 }
 
-func (r *BranchLabaSebelumPajakPenghasilanTaxRepositoryImpl) SaveFromUpload(data *models.BranchLabaSebelumPajakPenghasilanTax) error {
-	return r.DB.Create(data).Error
+func (r *BranchLabaSebelumPajakPenghasilanTaxRepositoryImpl) SaveFromUpload(tx *gorm.DB, data *models.BranchLabaSebelumPajakPenghasilanTax) error {
+	return tx.Create(data).Error
 }

@@ -40,7 +40,7 @@ func ConnectDatabase() {
 	}
 
 	// Migrate
-	if err := DB.AutoMigrate(&models.BranchLabaSebelumPajakPenghasilanTax{}); err != nil {
+	if err := DB.AutoMigrate(&models.BranchLabaSebelumPajakPenghasilanTax{}, &models.LogUpload{}); err != nil {
 		log.Fatalf(" Error migrating database: %v", err)
 	}
 
