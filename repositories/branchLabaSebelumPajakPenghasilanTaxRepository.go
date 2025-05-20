@@ -11,6 +11,7 @@ type BranchLabaSebelumPajakPenghasilanTaxRepository interface {
 		tx *gorm.DB, limit int, lastPeriode string,
 	) ([]*models.BranchLabaSebelumPajakPenghasilanTax, string, bool, error)
 	SaveFromUpload(tx *gorm.DB, data *models.BranchLabaSebelumPajakPenghasilanTax) error
+	GetAllDistinctData(tx *gorm.DB) ([]*models.BranchLabaSebelumPajakPenghasilanTax, error)
 }
 
 type BranchLabaSebelumPajakPenghasilanTaxRepositoryImpl struct{}
@@ -54,6 +55,27 @@ func (r *BranchLabaSebelumPajakPenghasilanTaxRepositoryImpl) GetDistinctPeriodeD
 	}
 
 	return tempResults, lastPeriodeResult, hasMore, nil
+}
+
+// get all distict data
+func (r *BranchLabaSebelumPajakPenghasilanTaxRepositoryImpl) GetAllDistinctData(tx *gorm.DB) ([]*models.BranchLabaSebelumPajakPenghasilanTax, error) {
+	subQuery := tx.
+		Model(&models.BranchLabaSebelumPajakPenghasilanTax{}).
+		Select("MIN(id)").
+		Group("periode")
+
+	query := tx.
+		Model(&models.BranchLabaSebelumPajakPenghasilanTax{}).
+		Where("id IN (?)", subQuery).
+		Order("periode ASC")
+
+	var results []*models.BranchLabaSebelumPajakPenghasilanTax
+
+	if err := query.Find(&results).Error; err != nil {
+		return nil, err
+	}
+
+	return results, nil
 }
 
 func (r *BranchLabaSebelumPajakPenghasilanTaxRepositoryImpl) SaveFromUpload(tx *gorm.DB, data *models.BranchLabaSebelumPajakPenghasilanTax) error {

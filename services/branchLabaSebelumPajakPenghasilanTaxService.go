@@ -23,6 +23,7 @@ type UploadErrorLog struct {
 type BranchLabaSebelumPajakPenghasilanTaxService interface {
 	GetDistinctPeriodeData(limit int, lastPeriode string) ([]*models.BranchLabaSebelumPajakPenghasilanTax, string, bool, error)
 	ImportExcel(file multipart.File, filename string) ([]*models.BranchLabaSebelumPajakPenghasilanTax, error)
+	GetAllDistinctData() ([]*models.BranchLabaSebelumPajakPenghasilanTax, error)
 }
 
 type BranchLabaSebelumPajakPenghasilanTaxServiceImpl struct {
@@ -45,6 +46,10 @@ func (s *BranchLabaSebelumPajakPenghasilanTaxServiceImpl) GetDistinctPeriodeData
 	return s.BranchLabaSebelumPajakPenghasilanTaxRepository.GetDistinctPeriodeData(s.DB, limit, lastPeriode)
 }
 
+func (s *BranchLabaSebelumPajakPenghasilanTaxServiceImpl) GetAllDistinctData() ([]*models.BranchLabaSebelumPajakPenghasilanTax, error) {
+	return s.BranchLabaSebelumPajakPenghasilanTaxRepository.GetAllDistinctData(s.DB)
+}
+
 func (s *BranchLabaSebelumPajakPenghasilanTaxServiceImpl) ImportExcel(file multipart.File, filename string) ([]*models.BranchLabaSebelumPajakPenghasilanTax, error) {
 	excel, err := excelize.OpenReader(file)
 	if err != nil {
@@ -55,6 +60,10 @@ func (s *BranchLabaSebelumPajakPenghasilanTaxServiceImpl) ImportExcel(file multi
 	rows, err := excel.GetRows(sheet)
 	if err != nil {
 		return nil, err
+	}
+
+	if len(rows) < 2 {
+		return nil, fmt.Errorf("file excel kosong")
 	}
 
 	var (
@@ -69,10 +78,16 @@ func (s *BranchLabaSebelumPajakPenghasilanTaxServiceImpl) ImportExcel(file multi
 		return nil, fmt.Errorf("gagal memulai transaksi: %w", tx.Error)
 	}
 
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
 	for i, row := range rows {
 		rowNumber := i + 1
 		if i == 0 || len(row) < 3 {
-			continue
+			return nil, fmt.Errorf("file excel tidak valid")
 		}
 
 		var errorMessages []string

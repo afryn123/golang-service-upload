@@ -18,6 +18,7 @@ type Data struct {
 type BranchLabaSebelumPajakPenghasilanTaxController interface {
 	GetDistinctPeriodeData(ctx *gin.Context)
 	UploadExcel(c *gin.Context)
+	GetAllDistinctData(ctx *gin.Context)
 }
 
 type BranchLabaSebelumPajakPenghasilanTaxControllerImpl struct {
@@ -36,13 +37,13 @@ func (c *BranchLabaSebelumPajakPenghasilanTaxControllerImpl) GetDistinctPeriodeD
 	limitStr := ctx.DefaultQuery("limit", "10")
 	limit, err := strconv.Atoi(limitStr)
 	if err != nil {
-		utils.ErrorResponse(ctx, http.StatusBadRequest, "invalid limit", err)
+		utils.ErrorResponse(ctx, http.StatusBadRequest, "invalid limit", err.Error())
 		return
 	}
 
 	items, lastPeriodeResult, hasMore, err := c.BranchLabaSebelumPajakPenghasilanTaxService.GetDistinctPeriodeData(limit, lastPeriode)
 	if err != nil {
-		utils.ErrorResponse(ctx, http.StatusInternalServerError, "error fetching data", err)
+		utils.ErrorResponse(ctx, http.StatusInternalServerError, "error fetching data", err.Error())
 		return
 	}
 
@@ -55,31 +56,43 @@ func (c *BranchLabaSebelumPajakPenghasilanTaxControllerImpl) GetDistinctPeriodeD
 	utils.JSONResponse(ctx, http.StatusOK, "success", data)
 }
 
-func (rc *BranchLabaSebelumPajakPenghasilanTaxControllerImpl) UploadExcel(c *gin.Context) {
-	fileHeader, err := c.FormFile("file")
+// getalldistict
+func (c *BranchLabaSebelumPajakPenghasilanTaxControllerImpl) GetAllDistinctData(ctx *gin.Context) {
+
+	items, err := c.BranchLabaSebelumPajakPenghasilanTaxService.GetAllDistinctData()
 	if err != nil {
-		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid file", err)
+		utils.ErrorResponse(ctx, http.StatusInternalServerError, "error fetching data", err.Error())
+		return
+	}
+
+	utils.JSONResponse(ctx, http.StatusOK, "success", items)
+}
+
+func (c *BranchLabaSebelumPajakPenghasilanTaxControllerImpl) UploadExcel(ctx *gin.Context) {
+	fileHeader, err := ctx.FormFile("file")
+	if err != nil {
+		utils.ErrorResponse(ctx, http.StatusBadRequest, "Invalid file", err.Error())
 		return
 	}
 	filename := fileHeader.Filename
 
 	if !utils.IsValidExcelFile(fileHeader) {
-		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid file format", "file must be .xlsx")
+		utils.ErrorResponse(ctx, http.StatusBadRequest, "Invalid file format", "file must be .xlsx")
 		return
 	}
 
 	file, err := fileHeader.Open()
 	if err != nil {
-		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to open file", err)
+		utils.ErrorResponse(ctx, http.StatusInternalServerError, "Failed to open file", err.Error())
 		return
 	}
 	defer file.Close()
 
-	data, err := rc.BranchLabaSebelumPajakPenghasilanTaxService.ImportExcel(file, filename)
+	data, err := c.BranchLabaSebelumPajakPenghasilanTaxService.ImportExcel(file, filename)
 	if err != nil {
-		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to import data", err)
+		utils.ErrorResponse(ctx, http.StatusInternalServerError, "Failed to import data", err.Error())
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Upload successful", "data": data})
+	utils.JSONResponse(ctx, http.StatusOK, "Success", data)
 }

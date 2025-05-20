@@ -14,18 +14,22 @@ func BranchLabaSebelumPajakPenghasilanTaxRoutes(r *gin.Engine) {
 	branchLabaSebelumPajakPenghasilanTaxRepository := repositories.NewBranchLabaSebelumPajakPenghasilanTaxRepository()
 	logUploadRepository := repositories.NewLogUploadRepository()
 
-	// Service — inject DB dan dua repo
 	branchLabaSebelumPajakPenghasilanTaxService := services.NewBranchLabaSebelumPajakPenghasilanTaxService(
 		config.DB,
 		branchLabaSebelumPajakPenghasilanTaxRepository,
 		logUploadRepository,
 	)
+	logUploadService := services.NewLogUploadService(config.DB, logUploadRepository)
 
 	// Controller
 	branchLabaSebelumPajakPenghasilanTaxController := controllers.NewBranchLabaSebelumPajakPenghasilanTaxController(branchLabaSebelumPajakPenghasilanTaxService)
+	logUploadController := controllers.NewLogUploadController(logUploadService)
 
 	// Routes
 	api := r.Group("/api")
 	api.GET("/getData", branchLabaSebelumPajakPenghasilanTaxController.GetDistinctPeriodeData)
 	api.POST("/uploadData", branchLabaSebelumPajakPenghasilanTaxController.UploadExcel)
+	api.GET("/getDataAll", branchLabaSebelumPajakPenghasilanTaxController.GetAllDistinctData)
+
+	api.GET("/logUpload", logUploadController.GetAllLog)
 }
